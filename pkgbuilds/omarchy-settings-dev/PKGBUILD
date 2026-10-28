@@ -1,13 +1,13 @@
 # Maintainer: Ryan Hughes <ryan@omarchy.org>
 pkgname='omarchy-settings-dev'
-pkgver=4.0.0.r7052.ga6dcc31
+pkgver=4.0.0.r7350.ge71dc3f
 pkgrel=1
 # Pinned by the upstream watch in .omarchy/package.json (bin/sync-upstream):
 # every quattro tip becomes a commit pin here, so the package is versioned,
 # checksummed and built exactly like a release, just more often. The r-number
 # is the branch's total commit count, not the distance from the last tag: the
 # published history used the total, and pacman must never see it go down.
-_commit=a6dcc31b6429fcf25e9e6bf90179f84c602cbf4e
+_commit=e71dc3fa7f727539de27029fa34489122b6b98e9
 pkgdesc='Omarchy user defaults, /etc/skel content, fonts, plymouth theme, and support helpers (quattro branch tip)'
 # Arch-specific because the shipped /etc tree is not the same on every
 # architecture for older sources: their zram and oomd drop-ins belong to the
@@ -19,7 +19,7 @@ pkgdesc='Omarchy user defaults, /etc/skel content, fonts, plymouth theme, and su
 # files as x86_64. makepkg only honours the arch-suffixed arrays below on
 # arch-specific packages.
 arch=('x86_64' 'aarch64')
-url='https://github.com/basecamp/omarchy'
+url='https://github.com/omacom/omarchy'
 license=('MIT')
 provides=('omarchy-settings' 'omarchy-security-functions')
 conflicts=('omarchy-settings')
@@ -126,8 +126,8 @@ _etc_override_paths=(
 # Source: the pinned quattro commit. Set OMARCHY_SRC=/path/to/checkout to
 # build from a local source tree instead (mirrors omarchy-zsh/omarchy-fish DX);
 # the arrays are emptied below so nothing is downloaded in that case.
-source=("omarchy::git+https://github.com/basecamp/omarchy.git#commit=${_commit}")
-sha256sums=('3644a3755652bb023ca37e785eba272d70c68b768a4f437f69fad8b9b79adb4d')
+source=("omarchy::git+https://github.com/omacom/omarchy.git#commit=${_commit}")
+sha256sums=('88f4034a17ac296b6f9a62ff66f17692d7ceb7d0a145717fc7b858768e46cb1f')
 if [[ -n "${OMARCHY_SRC:-}" ]]; then
   source=()
   sha256sums=()
@@ -224,6 +224,11 @@ package() {
   install -Dm644 default/systemd/user/omarchy-tailscale-receive.service "$pkgdir/usr/lib/systemd/user/omarchy-tailscale-receive.service"
   install -Dm644 default/systemd/user/omarchy-fcitx5.service "$pkgdir/usr/lib/systemd/user/omarchy-fcitx5.service"
   install -Dm644 default/systemd/user/omarchy-crash-watch.service "$pkgdir/usr/lib/systemd/user/omarchy-crash-watch.service"
+  # Holds WirePlumber at login until the session can open the cameras, so
+  # libcamera finds them (omarchy-hw-wait-camera-access).
+  if [[ -f default/systemd/user/wireplumber.service.d/10-omarchy-camera-access.conf ]]; then
+    install -Dm644 default/systemd/user/wireplumber.service.d/10-omarchy-camera-access.conf "$pkgdir/usr/lib/systemd/user/wireplumber.service.d/10-omarchy-camera-access.conf"
+  fi
   # First-run enables this unit, so it ships wherever the source has it.
   if [[ -f default/systemd/user/omarchy-brightness-keyboard-auto.service ]]; then
     install -Dm644 default/systemd/user/omarchy-brightness-keyboard-auto.service "$pkgdir/usr/lib/systemd/user/omarchy-brightness-keyboard-auto.service"
@@ -248,6 +253,12 @@ package() {
     install -Dm644 default/systemd/zram-generator.conf.d/90-omarchy.conf "$pkgdir/usr/lib/systemd/zram-generator.conf.d/90-omarchy.conf"
   fi
   install -Dm644 default/systemd/system/plocate-updatedb.service.d/10-omarchy.conf "$pkgdir/usr/lib/systemd/system/plocate-updatedb.service.d/10-omarchy.conf"
+  # Omarchy's time servers (ntp.omarchy.org) in place of systemd's built-in
+  # Arch pool, on both architectures. Conditional until the pinned source
+  # carries the drop-in.
+  if [[ -f default/systemd/timesyncd.conf.d/10-omarchy.conf ]]; then
+    install -Dm644 default/systemd/timesyncd.conf.d/10-omarchy.conf "$pkgdir/usr/lib/systemd/timesyncd.conf.d/10-omarchy.conf"
+  fi
   # systemd 262's NvPCR setup fails without a signed PCR policy in the UKI.
   local unit
   for unit in systemd-tpm2-setup-early.service systemd-pcrproduct.service systemd-pcrlogin@.service; do
@@ -353,7 +364,7 @@ ANSI_COLOR="38;2;158;206;106"
 HOME_URL="https://omarchy.org/"
 DOCUMENTATION_URL="https://learn.omacom.io/2/the-omarchy-manual"
 SUPPORT_URL="https://discord.gg/tXFUdasqhY"
-BUG_REPORT_URL="https://github.com/basecamp/omarchy/issues"
+BUG_REPORT_URL="https://github.com/omacom/omarchy/issues"
 LOGO=omarchy
 EOF
   for path in "${_etc_override_paths[@]}"; do
