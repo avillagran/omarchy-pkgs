@@ -1,5 +1,5 @@
 pkgname=omarchy-ambient
-pkgver=0.2.0
+pkgver=0.2.1
 pkgrel=1
 pkgdesc="Live backgrounds and screensavers for Omarchy: programs drawing behind the windows or over everything"
 arch=('x86_64' 'aarch64')
@@ -17,7 +17,7 @@ optdepends=(
 options=('!debug')
 
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('30d99dbd244913bd292a03fa1ace911d7bbcdbdeaea86eb9062743f74be67048')
+sha256sums=('140af3e0d6eb44f8e0de17adeaaab8dfe6d78ad0e7fc4570db0532926424d191')
 
 build() {
   cd "$pkgname-$pkgver"
